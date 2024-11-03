@@ -1,3 +1,0 @@
-FROM rabbitmq:3
-
-

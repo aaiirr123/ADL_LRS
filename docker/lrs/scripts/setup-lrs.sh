@@ -18,7 +18,7 @@ echo "Changing file permissions ..."
 chmod -R 775 /opt/lrs
 chmod -R 775 /etc/uwsgi/vassals
 chmod -R 775 /lib/systemd/system
-echo "... file permissions set!  Starting container."
+#echo "... file permissions set!  Starting container."
 
-# Start uwsgi
-/opt/lrs/env/bin/uwsgi --emperor /etc/uwsgi/vassals
+# # Start uwsgi
+

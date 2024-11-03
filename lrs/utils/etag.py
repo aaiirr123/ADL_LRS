@@ -55,8 +55,8 @@ def check_modification_conditions(request, record, created, required=True):
         error_message = f"A document matching your query already exists, but the request did not include ETag headers. " \
             + f"If you would like to override the document, provide the following header:: " \
             + f"If-Match: \"{proper_etag}\""
-        
-        raise Conflict(error_message)
+        # We will take this out of now to allow for older cmi5 content
+        # raise Conflict(error_message)
     
     # Check against the If-None-Match condition.
     #

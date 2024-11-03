@@ -1,7 +1,6 @@
 # Django settings for adl_lrs project.
-from os import path
+import os
 from os.path import dirname, abspath
-from configparser import RawConfigParser
 
 ALLOWED_HOSTS = ['*']
 
@@ -9,124 +8,101 @@ ALLOWED_HOSTS = ['*']
 SETTINGS_DIR = dirname(abspath(__file__))
 PROJECT_ROOT = dirname(dirname(SETTINGS_DIR))
 
-config = RawConfigParser()
-config.read(SETTINGS_DIR+'/settings.ini')
+# Helper function to parse boolean environment variables
+def get_bool_env(var_name, default='False'):
+    return os.environ.get(var_name, default).lower() in ('true', '1', 't', 'yes')
 
 # If you want to debug
-DEBUG = config.getboolean('debug', 'DEBUG')
+DEBUG = get_bool_env('DEBUG', 'False')
 
 # Set these email values to send the reset password link
 # If you do not want this functionality just comment out the
 # Forgot Password? link in templates/registration/login.html
-EMAIL_BACKEND = config.get('email', 'EMAIL_BACKEND')
-EMAIL_HOST = config.get('email', 'EMAIL_HOST')
-EMAIL_PORT = config.getint('email', 'EMAIL_PORT')
-EMAIL_HOST_USER = config.get('email', 'EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config.get('email', 'EMAIL_HOST_PASSWORD')
-EMAIL_USE_SSL = config.getboolean('email', 'EMAIL_USE_SSL')
-EMAIL_USE_TLS = config.getboolean('email', 'EMAIL_USE_TLS')
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '25'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_SSL = get_bool_env('EMAIL_USE_SSL', 'False')
+EMAIL_USE_TLS = get_bool_env('EMAIL_USE_TLS', 'False')
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 
 # Google reCAPTCHA Config
-# 
-# Using reCAPTCHA currently requires a Google API key, which is free.  
-USE_GOOGLE_RECAPTCHA = config.getboolean('recaptcha', 'USE_GOOGLE_RECAPTCHA')
-RECAPTCHA_PUBLIC_KEY = config.get('recaptcha', 'RECAPTCHA_PUBLIC_KEY')
-RECAPTCHA_PRIVATE_KEY = config.get('recaptcha', 'RECAPTCHA_PRIVATE_KEY')
+#
+# Using reCAPTCHA currently requires a Google API key, which is free.
+USE_GOOGLE_RECAPTCHA = get_bool_env('USE_GOOGLE_RECAPTCHA', 'False')
+RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', '')
+RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', '')
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config.get('database', 'NAME'),
-        'USER': config.get('database', 'USER'),
-        'PASSWORD': config.get('database', 'PASSWORD'),
-        'HOST': config.get('database', 'HOST'),
-        'PORT': config.getint('database', 'PORT'),
+        'NAME': os.environ.get('DB_NAME', 'lrs'),
+        'USER': os.environ.get('DB_USER', 'lrs'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'lrs'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': int(os.environ.get('DB_PORT', '5432')),
     }
 }
 
-# Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be available on all operating systems.
-# On Unix systems, a value of None will cause Django to use the same
-# timezone as the operating system.
-# If running in a Windows environment this must be set to the same as your
-# system time zone.
-TIME_ZONE = config.get('preferences', 'TIME_ZONE')
+# Local time zone for this installation
+TIME_ZONE = os.environ.get('TIME_ZONE', 'UTC')
 
-# Language code for this installation. All choices can be found here:
-# http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = config.get('preferences', 'LANGUAGE_CODE')
+# Language code for this installation
+LANGUAGE_CODE = os.environ.get('LANGUAGE_CODE', 'en-us')
 
-# The ID, as an integer, of the current site in the django_site database table.
-# This is used so that application data can hook into specific sites and a single database can manage
-# content for multiple sites.
-SITE_ID = config.getint('site', 'SITE_ID', fallback=1)
+# The ID, as an integer, of the current site in the django_site database table
+SITE_ID = int(os.environ.get('SITE_ID', '1'))
 
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
+# Internationalization settings
 USE_I18N = True
-
-# If you set this to False, Django will not format dates, numbers and
-# calendars according to the current locale.
 USE_L10N = True
-
-# If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = True
 
 # Set this to True if you would like to utilize the webhooks functionality
-USE_HOOKS = config.getboolean('hooks', 'USE_HOOKS')
+USE_HOOKS = get_bool_env('USE_HOOKS', 'False')
 
 # Newer versions of Django recommend specifying a default auto field here
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-# Absolute filesystem path to the directory that will hold user-uploaded files.
-# Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = path.join(PROJECT_ROOT, 'media')
-# Paths for xapi media
+# Absolute filesystem path to the directory that will hold user-uploaded files
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
+
+# Paths for xAPI media
 AGENT_PROFILE_UPLOAD_TO = "agent_profile"
 ACTIVITY_STATE_UPLOAD_TO = "activity_state"
 ACTIVITY_PROFILE_UPLOAD_TO = "activity_profile"
 STATEMENT_ATTACHMENT_UPLOAD_TO = "attachment_payloads"
 
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash.
-# Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
+# URL that handles the media served from MEDIA_ROOT
 MEDIA_URL = '/media/'
 
-# Absolute path to the directory static files should be collected to.
-# Don't put anything in this directory yourself; store your static files
-# in apps' "static/" subdirectories and in STATICFILES_DIRS.
-# Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = ''
+# Absolute path to the directory static files should be collected to
+STATIC_ROOT = '/opt/lrs/ADL_LRS/adl_lrs/static/'
 
-# URL prefix for static files.
-# Example: "http://media.lawrence.com/static/"
+# URL prefix for static files
 STATIC_URL = '/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
-    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
+    # Add paths here
 )
 
 # Current xAPI version
 XAPI_VERSION = '2.0.0'
-
 XAPI_VERSIONS = ['1.0.0', '1.0.1', '1.0.2', '1.0.3', XAPI_VERSION]
 
 # Where to be redirected after logging in
 LOGIN_REDIRECT_URL = '/me'
 
 # Me view has a tab of user's statements
-STMTS_PER_PAGE = config.getint('preferences', 'STMTS_PER_PAGE')
+STMTS_PER_PAGE = int(os.environ.get('STMTS_PER_PAGE', '10'))
 
 # Whether HTTP auth or OAuth is enabled
-ALLOW_EMPTY_HTTP_AUTH = config.getboolean('auth', 'ALLOW_EMPTY_HTTP_AUTH')
-OAUTH_ENABLED = config.getboolean('auth', 'OAUTH_ENABLED')
+ALLOW_EMPTY_HTTP_AUTH = get_bool_env('ALLOW_EMPTY_HTTP_AUTH', 'False')
+OAUTH_ENABLED = get_bool_env('OAUTH_ENABLED', 'False')
 
 # OAuth1 callback views
 OAUTH_AUTHORIZE_VIEW = 'oauth_provider.views.authorize_client'
@@ -137,26 +113,14 @@ AUTH_USER_MODEL = "auth.User"
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {
-            'min_length': 8,
-        }
+        'OPTIONS': {'min_length': 8}
     },
-    {
-        # Blocks passwords that are common words
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        # Blocks passwords that are entirely numeric
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-    {
-        # Blocks passwords that are too similar to the username
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    }
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'}
 ]
 
-# List STATEMENTS_WRITE and STATEMENTS_READ_MINE first so they get
-# defaulted in oauth2/forms.py
+# OAuth scopes
 STATE = 1
 PROFILE = 1 << 1
 DEFINE = 1 << 2
@@ -177,24 +141,27 @@ OAUTH_SCOPES = (
     (ALL, 'all')
 )
 
-AMPQ_USERNAME = config.get('ampq', 'USERNAME')
-AMPQ_PASSWORD = config.get('ampq', 'PASSWORD')
-AMPQ_HOST = config.get('ampq', 'HOST')
-AMPQ_PORT = config.getint('ampq', 'PORT')
-AMPQ_VHOST = config.get('ampq', 'VHOST')
+# AMPQ settings
+AMPQ_USERNAME = os.environ.get('AMPQ_USERNAME', 'guest')
+AMPQ_PASSWORD = os.environ.get('AMPQ_PASSWORD', 'guest')
+AMPQ_HOST = os.environ.get('AMPQ_HOST', 'localhost')
+AMPQ_PORT = int(os.environ.get('AMPQ_PORT', '5672'))
+AMPQ_VHOST = os.environ.get('AMPQ_VHOST', '/')
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
-
 CELERY_STORE_ERRORS_EVEN_IF_IGNORED = True
 CELERY_IGNORE_RESULT = True
 
 # Limit on number of statements the server will return
-SERVER_STMT_LIMIT = config.getint('preferences', 'SERVER_STMT_LIMIT')
-# Fifteen second timeout to all celery tasks
+SERVER_STMT_LIMIT = int(os.environ.get('SERVER_STMT_LIMIT', '100'))
+
+# Celery task timeouts
 CELERYD_TASK_SOFT_TIME_LIMIT = 15
+
 # ActivityID resolve timeout (seconds)
-ACTIVITY_ID_RESOLVE_TIMEOUT = .2
+ACTIVITY_ID_RESOLVE_TIMEOUT = 0.2
+
 # Caches for /more endpoint and attachments
 CACHES = {
     'default': {
@@ -209,21 +176,21 @@ CACHES = {
     },
 }
 
-# List of finder classes that know how to find static files in
-# various locations.
+# Static files finders
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = config.get('secrets', 'SECRET_KEY')
+# Secret key
+SECRET_KEY = os.environ.get('SECRET_KEY', '_secret_')
 
+# Templates configuration
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            # insert your TEMPLATE_DIRS here
+            # Add template directories here
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -242,59 +209,48 @@ TEMPLATES = [
     },
 ]
 
+# CORS and security settings
 USE_ETAGS = False
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = (
-    'HEAD',
-    'POST',
-    'GET',
-    'OPTIONS',
-    'DELETE',
-    'PUT'
+    'HEAD', 'POST', 'GET', 'OPTIONS', 'DELETE', 'PUT'
 )
 CORS_ALLOW_HEADERS = (
-    'Content-Type',
-    'Content-Length',
-    'Authorization',
-    'If-Match',
-    'If-None-Match',
-    'X-Experience-API-Version',
-    'Accept-Language'
+    'Content-Type', 'Content-Length', 'Authorization',
+    'If-Match', 'If-None-Match', 'X-Experience-API-Version', 'Accept-Language'
 )
 CORS_EXPOSE_HEADERS = (
-    'ETag',
-    'Last-Modified',
-    'Cache-Control',
-    'Content-Type',
-    'Content-Length',
-    'WWW-Authenticate',
-    'X-Experience-API-Version',
-    'Accept-Language'
+    'ETag', 'Last-Modified', 'Cache-Control', 'Content-Type',
+    'Content-Length', 'WWW-Authenticate', 'X-Experience-API-Version', 'Accept-Language'
 )
 CORS_URLS_REGEX = r"^/(xapi|xAPI)/.*$"
 
-DEFENDER_REDIS_URL = "redis://redis:6379/0"
+# Redis settings for Defender
+DEFENDER_REDIS_URL = os.environ.get('DEFENDER_REDIS_URL', 'redis://localhost:6379/0')
 
+# Middleware configuration
 MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # Uncomment the next line for simple clickjacking protection:
+    # Uncomment the next line for simple clickjacking protection
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'defender.middleware.FailedLoginMiddleware',
 )
 
-# Main url router
+# Main URL configuration
 ROOT_URLCONF = 'adl_lrs.urls'
 
-# Python dotted path to the WSGI application used by Django's runserver.
+# WSGI application
 WSGI_APPLICATION = 'adl_lrs.wsgi.application'
 
+# Admin registration
 ADMIN_REGISTER_APPS = ['adl_lrs', 'lrs', 'oauth_provider']
 
+# Installed apps
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -312,16 +268,14 @@ INSTALLED_APPS = [
     'defender'
 ]
 
-REQUEST_HANDLER_LOG_DIR = path.join(PROJECT_ROOT, 'logs/django_request.log')
-DEFAULT_LOG_DIR = path.join(PROJECT_ROOT, 'logs/lrs.log')
-CELERY_TASKS_LOG_DIR = path.join(PROJECT_ROOT, 'logs/celery/celery_tasks.log')
+# Logging directories
+REQUEST_HANDLER_LOG_DIR = os.path.join(PROJECT_ROOT, 'logs/django_request.log')
+DEFAULT_LOG_DIR = os.path.join(PROJECT_ROOT, 'logs/lrs.log')
+CELERY_TASKS_LOG_DIR = os.path.join(PROJECT_ROOT, 'logs/celery/celery_tasks.log')
 
 CELERYD_HIJACK_ROOT_LOGGER = False
 
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-# lrs logger is used in views.py for LRS specific logging
-# django.request logger logs warning and error server requests
+# Logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

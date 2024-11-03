@@ -1,3 +1,4 @@
+import hashlib
 import json
 
 from typing import Tuple
@@ -27,10 +28,21 @@ class ActivityStateManager():
 
         # Go to beginning of file
         state.seek(0)
-        fn = "%s_%s_%s" % (s.agent_id, s.activity_id,
-                           request_dict.get('filename', s.id))
-        s.state.save(fn, state)
 
+        # Generate hashed components to keep filename length manageable
+        agent_hash = hashlib.sha1(str(s.agent_id).encode()).hexdigest()
+        activity_hash = hashlib.sha1(str(s.activity_id).encode()).hexdigest()
+        default_filename = str(s.id)[:10]  # Use the first 10 characters of `s.id` as a fallback filename
+        
+        # Concatenate parts to form a unique, short filename
+        fn = f"{agent_hash}_{activity_hash}_{request_dict.get('filename', default_filename)}"
+
+        # Optionally, truncate the filename to a safe length
+        max_filename_length = 255
+        fn = fn[:max_filename_length]
+
+        # Save the file using the shortened filename
+        s.state.save(fn, state)
         s.save()
 
     def get_record(self, **kwargs) -> Tuple[ActivityState, bool]:

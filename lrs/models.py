@@ -749,7 +749,7 @@ class AttachmentFileSystemStorage(FileSystemStorage):
 
 class StatementAttachment(models.Model):
     canonical_data = JSONField(default=dict)
-    payload = models.FileField(max_length=150, upload_to=STATEMENT_ATTACHMENT_UPLOAD_TO,
+    payload = models.FileField(max_length=400, upload_to=STATEMENT_ATTACHMENT_UPLOAD_TO,
                                storage=AttachmentFileSystemStorage(), null=True)
     statement = models.ForeignKey(
         Statement, related_name="stmt_attachments", null=True, on_delete=models.CASCADE)
@@ -786,7 +786,9 @@ class ActivityState(models.Model):
     def save(self, *args, **kwargs):
 
         if isinstance(self.json_state, bytes):
+
             self.json_state = self.json_state.decode("utf-8")
+
 
         if self.json_state and isinstance(self.json_state, str):
             try:
